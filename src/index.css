@@ -1,0 +1,96 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #60a5fa;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+  --color-primary-800: #1e40af;
+  --color-primary-900: #1e3a8a;
+  --color-primary-950: #172554;
+
+  --color-success-50: #f0fdf4;
+  --color-success-500: #22c55e;
+  --color-success-600: #16a34a;
+
+  --color-warning-50: #fffbeb;
+  --color-warning-500: #f59e0b;
+  --color-warning-600: #d97706;
+
+  --color-danger-50: #fef2f2;
+  --color-danger-500: #ef4444;
+  --color-danger-600: #dc2626;
+
+  --color-sidebar: #0f172a;
+  --color-sidebar-hover: #1e293b;
+  --color-sidebar-active: #1e3a8a;
+}
+
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900 antialiased;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  /* Dark mode base overrides */
+  .dark body,
+  .dark {
+    @apply bg-[#0f172a] text-[#f1f5f9];
+  }
+
+  .dark .bg-white {
+    background-color: #1e293b;
+  }
+
+  .dark .bg-gray-50 {
+    background-color: #0f172a;
+  }
+
+  .dark .border-gray-200 {
+    border-color: #334155;
+  }
+
+  .dark .text-gray-900 {
+    color: #f1f5f9;
+  }
+
+  .dark .text-gray-700 {
+    color: #cbd5e1;
+  }
+
+  .dark .text-gray-600 {
+    color: #94a3b8;
+  }
+
+  .dark .text-gray-500 {
+    color: #94a3b8;
+  }
+
+  .dark .hover\:bg-gray-100:hover {
+    background-color: #334155;
+  }
+
+  .dark .hover\:bg-gray-50:hover {
+    background-color: #1e293b;
+  }
+
+  .dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]) {
+    border-color: #334155;
+  }
+
+  .dark .hover\:text-gray-700:hover {
+    color: #e2e8f0;
+  }
+}
+
+@layer components {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+}
