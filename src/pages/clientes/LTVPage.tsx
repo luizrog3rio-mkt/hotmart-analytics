@@ -12,7 +12,7 @@ import {
 } from 'recharts'
 import { DollarSign, TrendingUp, Clock, Target } from 'lucide-react'
 
-import { getDemoData } from '@/services/demo-data'
+import { useData } from '@/hooks/useData'
 import { calculateLTV } from '@/services/customer-analytics'
 import type { DateRange } from '@/services/metrics'
 
@@ -110,7 +110,7 @@ export function LTVPage() {
     to: new Date(),
   })
 
-  const demoData = useMemo(() => getDemoData(), [])
+  const { data: demoData } = useData()
 
   const ltvData = useMemo(
     () => calculateLTV(demoData.transactions),

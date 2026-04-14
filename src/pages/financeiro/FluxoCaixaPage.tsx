@@ -19,7 +19,7 @@ import {
   ArrowUpRight,
 } from 'lucide-react'
 
-import { getDemoData } from '@/services/demo-data'
+import { useData } from '@/hooks/useData'
 import { calculateCashFlow } from '@/services/customer-analytics'
 import { KPICard } from '@/components/charts/KPICard'
 import { ChartContainer } from '@/components/charts/ChartContainer'
@@ -98,7 +98,7 @@ interface WaterfallItem {
 // ---------------------------------------------------------------------------
 
 export function FluxoCaixaPage() {
-  const demoData = useMemo(() => getDemoData(), [])
+  const { data: demoData } = useData()
   const cashFlow = useMemo(
     () => calculateCashFlow(demoData.transactions),
     [demoData],

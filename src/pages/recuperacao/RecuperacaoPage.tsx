@@ -25,7 +25,7 @@ import {
   Tablet,
 } from 'lucide-react'
 
-import { getDemoData } from '@/services/demo-data'
+import { useData } from '@/hooks/useData'
 import { filterTransactions } from '@/services/metrics'
 import type { DateRange } from '@/services/metrics'
 import { calculateRecovery } from '@/services/customer-analytics'
@@ -121,7 +121,7 @@ export function RecuperacaoPage() {
   })
   const [activeTab, setActiveTab] = useState('boletos')
 
-  const demoData = useMemo(() => getDemoData(), [])
+  const { data: demoData } = useData()
 
   const filteredTx = useMemo(
     () => filterTransactions(demoData.transactions, dateRange),

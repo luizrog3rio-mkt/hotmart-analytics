@@ -11,7 +11,7 @@ import {
   Cell,
 } from 'recharts'
 import { Package } from 'lucide-react'
-import { getDemoData } from '@/services/demo-data'
+import { useData } from '@/hooks/useData'
 import { filterTransactions, getSalesByProduct } from '@/services/metrics'
 import type { DateRange } from '@/types'
 import { formatCurrency, formatNumber, formatPercent, cn } from '@/lib/utils'
@@ -62,7 +62,7 @@ function CurrencyTooltip({
 // ---------------------------------------------------------------------------
 
 export function ProductAnalysisPage() {
-  const data = useMemo(() => getDemoData(), [])
+  const { data } = useData()
 
   const [dateRange, setDateRange] = useState<DateRange>({
     from: startOfDay(subDays(new Date(), 29)),

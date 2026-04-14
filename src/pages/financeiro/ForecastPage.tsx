@@ -20,7 +20,7 @@ import {
   Minus,
 } from 'lucide-react'
 
-import { getDemoData } from '@/services/demo-data'
+import { useData } from '@/hooks/useData'
 import { calculateForecast } from '@/services/customer-analytics'
 import { KPICard } from '@/components/charts/KPICard'
 import { ChartContainer } from '@/components/charts/ChartContainer'
@@ -128,7 +128,7 @@ const SCENARIOS: ScenarioInfo[] = [
 // ---------------------------------------------------------------------------
 
 export function ForecastPage() {
-  const demoData = useMemo(() => getDemoData(), [])
+  const { data: demoData } = useData()
   const forecast = useMemo(
     () => calculateForecast(demoData.transactions),
     [demoData],

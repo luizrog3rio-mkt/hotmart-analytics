@@ -17,7 +17,7 @@ import {
   AlertTriangle,
 } from 'lucide-react'
 
-import { getDemoData } from '@/services/demo-data'
+import { useData } from '@/hooks/useData'
 import type { DemoTransaction } from '@/services/demo-data'
 import { filterTransactions, getTopAffiliates } from '@/services/metrics'
 import type { DateRange } from '@/services/metrics'
@@ -355,7 +355,7 @@ export function AfiliadosPage() {
     to: new Date(),
   })
 
-  const demoData = useMemo(() => getDemoData(), [])
+  const { data: demoData } = useData()
 
   // Previous period for KPI comparison
   const previousRange = useMemo<DateRange>(() => {

@@ -8,7 +8,7 @@ import {
   RotateCcw,
   Download,
 } from 'lucide-react'
-import { getDemoData } from '@/services/demo-data'
+import { useData } from '@/hooks/useData'
 import type { DemoTransaction } from '@/services/demo-data'
 import { filterTransactions } from '@/services/metrics'
 import type { DateRange } from '@/types'
@@ -58,7 +58,7 @@ const SOURCE_LABELS: Record<string, string> = {
 // ---------------------------------------------------------------------------
 
 export function TransactionsPage() {
-  const data = useMemo(() => getDemoData(), [])
+  const { data } = useData()
 
   const [dateRange, setDateRange] = useState<DateRange>({
     from: startOfDay(subDays(new Date(), 29)),

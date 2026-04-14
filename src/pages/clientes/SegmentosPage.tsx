@@ -10,7 +10,7 @@ import {
 } from 'recharts'
 import { Users, Target, Crown, AlertTriangle } from 'lucide-react'
 
-import { getDemoData } from '@/services/demo-data'
+import { useData } from '@/hooks/useData'
 import { calculateRFM, getRFMSegmentSummary } from '@/services/customer-analytics'
 import type { RFMScore } from '@/services/customer-analytics'
 import type { DateRange } from '@/services/metrics'
@@ -179,7 +179,7 @@ export function SegmentosPage() {
     to: new Date(),
   })
 
-  const demoData = useMemo(() => getDemoData(), [])
+  const { data: demoData } = useData()
 
   const rfmScores = useMemo(
     () => calculateRFM(demoData.transactions),

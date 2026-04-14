@@ -14,7 +14,7 @@ import {
 } from 'recharts'
 import { Users, CalendarDays, TrendingUp, Repeat } from 'lucide-react'
 
-import { getDemoData } from '@/services/demo-data'
+import { useData } from '@/hooks/useData'
 import { calculateCohorts } from '@/services/customer-analytics'
 import type { DateRange } from '@/services/metrics'
 
@@ -113,7 +113,7 @@ export function CoortesPage() {
     to: new Date(),
   })
 
-  const demoData = useMemo(() => getDemoData(), [])
+  const { data: demoData } = useData()
 
   const cohorts = useMemo(
     () => calculateCohorts(demoData.transactions),

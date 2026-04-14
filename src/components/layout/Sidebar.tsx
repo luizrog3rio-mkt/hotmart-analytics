@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react'
-import { NavLink, useLocation } from 'react-router-dom'
+import { NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { useAuth } from '@/contexts/AuthContext'
 import {
   BarChart3,
   LayoutDashboard,
@@ -125,6 +126,8 @@ const navItems: NavItem[] = [
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set())
   const location = useLocation()
+  const { profile, signOut } = useAuth()
+  const navigate = useNavigate()
 
   const toggleExpanded = useCallback((label: string) => {
     setExpandedItems((prev) => {
@@ -267,13 +270,14 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         <div className="shrink-0 border-t border-white/10 p-3">
           <div className="flex items-center gap-3 rounded-lg px-3 py-2.5">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-600 text-xs font-semibold text-white">
-              U
+              {profile?.full_name?.charAt(0) || 'U'}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="truncate text-sm font-medium text-white">Usuário</p>
-              <p className="truncate text-xs text-gray-500">usuario@email.com</p>
+              <p className="truncate text-sm font-medium text-white">{profile?.full_name || 'Usuário'}</p>
+              <p className="truncate text-xs text-gray-500">{profile?.email || ''}</p>
             </div>
             <button
+              onClick={async () => { await signOut(); navigate('/login') }}
               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-gray-500 hover:bg-sidebar-hover hover:text-white transition-colors"
               aria-label="Sair"
             >

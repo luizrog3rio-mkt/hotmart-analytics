@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import {
   User,
   Plug,
@@ -16,8 +16,10 @@ import {
   Send,
   FileSpreadsheet,
 } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
+import { updateProfile } from '@/services/import-service'
 import { Tabs } from '@/components/ui/Tabs'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
@@ -40,7 +42,19 @@ const SETTINGS_TABS = [
 // ---------------------------------------------------------------------------
 
 function ProfileTab() {
-  const { profile } = useAuth()
+  const { user, profile, isDemoMode } = useAuth()
+  const [fullName, setFullName] = useState(profile?.full_name || '')
+
+  useEffect(() => {
+    setFullName(profile?.full_name || '')
+  }, [profile?.full_name])
+
+  async function handleSaveProfile() {
+    if (!user?.id) return
+    const success = await updateProfile(user.id, { full_name: fullName })
+    if (success) toast.success('Perfil atualizado!')
+    else toast.error('Erro ao salvar perfil')
+  }
 
   return (
     <div className="space-y-6">
@@ -75,15 +89,18 @@ function ProfileTab() {
             <h3 className="text-sm font-semibold text-gray-700">
               Informacoes pessoais
             </h3>
-            <Badge variant="default" className="ml-auto">
-              Modo demo
-            </Badge>
+            {isDemoMode && (
+              <Badge variant="default" className="ml-auto">
+                Modo demo
+              </Badge>
+            )}
           </div>
 
           <Input
             label="Nome completo"
-            value={profile?.full_name ?? ''}
-            disabled
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            readOnly={isDemoMode}
           />
           <Input
             label="Email"
@@ -93,7 +110,11 @@ function ProfileTab() {
           />
 
           <div className="pt-2">
-            <Button variant="secondary" disabled>
+            <Button
+              variant="secondary"
+              onClick={handleSaveProfile}
+              disabled={isDemoMode}
+            >
               Salvar alteracoes
             </Button>
           </div>

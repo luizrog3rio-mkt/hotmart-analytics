@@ -22,7 +22,7 @@ import {
   Banknote,
 } from 'lucide-react'
 
-import { getDemoData } from '@/services/demo-data'
+import { useData } from '@/hooks/useData'
 import {
   calculateAttribution,
   calculateCampaigns,
@@ -867,7 +867,7 @@ export function MarketingPage() {
   })
   const [activeTab, setActiveTab] = useState<string>('atribuicao')
 
-  const demoData = useMemo(() => getDemoData(), [])
+  const { data: demoData } = useData()
 
   // Attribution data
   const attribution = useMemo(

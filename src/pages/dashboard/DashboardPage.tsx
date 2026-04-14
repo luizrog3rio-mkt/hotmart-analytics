@@ -23,7 +23,7 @@ import {
   RotateCcw,
 } from 'lucide-react'
 
-import { getDemoData } from '@/services/demo-data'
+import { useData } from '@/hooks/useData'
 import {
   calculateKPIs,
   getRevenueOverTime,
@@ -133,7 +133,7 @@ function DashboardPage() {
     to: new Date(),
   })
 
-  const demoData = useMemo(() => getDemoData(), [])
+  const { data: demoData } = useData()
 
   // KPIs
   const kpis = useMemo(

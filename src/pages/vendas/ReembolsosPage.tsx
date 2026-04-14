@@ -21,7 +21,7 @@ import {
   Clock,
 } from 'lucide-react'
 
-import { getDemoData } from '@/services/demo-data'
+import { useData } from '@/hooks/useData'
 import type { DemoTransaction, DemoRefund } from '@/services/demo-data'
 import { filterTransactions } from '@/services/metrics'
 import type { DateRange } from '@/services/metrics'
@@ -285,7 +285,7 @@ export function ReembolsosPage() {
     to: new Date(),
   })
 
-  const demoData = useMemo(() => getDemoData(), [])
+  const { data: demoData } = useData()
 
   // Previous period for KPI comparison
   const previousRange = useMemo<DateRange>(() => {

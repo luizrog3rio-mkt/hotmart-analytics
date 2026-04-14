@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import type { DemoTransaction, DemoData, DemoDailyMetric } from '@/services/demo-data'
 import type { DateRange } from '@/services/metrics'
 import {

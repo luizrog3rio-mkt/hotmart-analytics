@@ -23,7 +23,7 @@ import {
   AlertCircle,
 } from 'lucide-react'
 
-import { getDemoData } from '@/services/demo-data'
+import { useData } from '@/hooks/useData'
 import { calculateChurn } from '@/services/customer-analytics'
 import type { DateRange } from '@/services/metrics'
 
@@ -96,7 +96,7 @@ export function ChurnPage() {
     to: new Date(),
   })
 
-  const demoData = useMemo(() => getDemoData(), [])
+  const { data: demoData } = useData()
 
   const churnData = useMemo(
     () => calculateChurn(demoData.transactions, dateRange),

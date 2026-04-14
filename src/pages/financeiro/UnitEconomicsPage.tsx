@@ -18,7 +18,7 @@ import {
   TrendingUp,
 } from 'lucide-react'
 
-import { getDemoData } from '@/services/demo-data'
+import { useData } from '@/hooks/useData'
 import { calculateUnitEconomics } from '@/services/customer-analytics'
 import { KPICard } from '@/components/charts/KPICard'
 import { ChartContainer } from '@/components/charts/ChartContainer'
@@ -136,7 +136,7 @@ function getMarginBarColor(pct: number): string {
 // ---------------------------------------------------------------------------
 
 export function UnitEconomicsPage() {
-  const demoData = useMemo(() => getDemoData(), [])
+  const { data: demoData } = useData()
   const economics = useMemo(
     () => calculateUnitEconomics(demoData.transactions),
     [demoData],

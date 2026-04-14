@@ -13,7 +13,6 @@ import { LoadingState } from '@/components/layout/LoadingState'
 // ---------------------------------------------------------------------------
 
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'))
-const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage'))
 const OnboardingWizard = lazy(() => import('@/pages/onboarding/OnboardingWizard').then(m => ({ default: m.OnboardingWizard })))
 const DashboardPage = lazy(() => import('@/pages/dashboard/DashboardPage').then(m => ({ default: m.DashboardPage })))
 
@@ -79,7 +78,6 @@ export default function App() {
               <Routes>
                 {/* Public routes */}
                 <Route path="/login" element={<LoginPage />} />
-                <Route path="/register" element={<RegisterPage />} />
 
                 {/* Onboarding (protected but outside main layout) */}
                 <Route element={<ProtectedRoute />}>

@@ -24,7 +24,7 @@ import {
   ShoppingBag,
 } from 'lucide-react'
 
-import { getDemoData } from '@/services/demo-data'
+import { useData } from '@/hooks/useData'
 import { calculateOffers, calculatePricing } from '@/services/marketing-analytics'
 import type { OfferData, PricingData } from '@/services/marketing-analytics'
 
@@ -400,7 +400,7 @@ function CouponComparisonCard({ label, icon, data, highlight }: CouponComparison
 export function OfertasPage() {
   const [activeTab, setActiveTab] = useState('ofertas')
 
-  const demoData = useMemo(() => getDemoData(), [])
+  const { data: demoData } = useData()
 
   const offerData = useMemo<OfferData>(
     () => calculateOffers(demoData.transactions),

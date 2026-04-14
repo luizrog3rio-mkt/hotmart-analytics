@@ -27,7 +27,11 @@ import { Input } from '@/components/ui/Input'
 import { Badge } from '@/components/ui/Badge'
 import { Card, CardContent } from '@/components/ui/Card'
 import { parseFile, type ParseResult } from '@/services/csv-parser'
+import { mapToTransactions } from '@/services/csv-parser'
 import { getDemoData } from '@/services/demo-data'
+import { useAuth } from '@/contexts/AuthContext'
+import { completeOnboarding, updateOnboardingStep, saveGoals, importTransactionsToSupabase } from '@/services/import-service'
+import toast from 'react-hot-toast'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -172,6 +176,7 @@ function StepConnectData({
   onNext: () => void
   onBack: () => void
 }) {
+  const { user } = useAuth()
   const [parseResult, setParseResult] = useState<ParseResult | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [fileName, setFileName] = useState<string | null>(null)
@@ -181,7 +186,15 @@ function StepConnectData({
     setFileName(file.name)
     const result = await parseFile(file)
     setParseResult(result)
-  }, [])
+
+    if (user?.id && result.data.length > 0) {
+      const mapped = mapToTransactions(result)
+      const importResult = await importTransactionsToSupabase(user.id, mapped, file.name)
+      if (importResult.success) {
+        toast.success(`${importResult.transactionsCreated} transacoes importadas!`)
+      }
+    }
+  }, [user])
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -400,9 +413,21 @@ function StepGoals({
   onNext: () => void
   onBack: () => void
 }) {
+  const { user } = useAuth()
   const [revenueGoal, setRevenueGoal] = useState('')
   const [salesGoal, setSalesGoal] = useState('')
   const [refundLimit, setRefundLimit] = useState('')
+
+  const handleContinue = useCallback(() => {
+    if (user?.id) {
+      saveGoals(user.id, {
+        revenue: revenueGoal ? Number(revenueGoal) : undefined,
+        sales: salesGoal ? Number(salesGoal) : undefined,
+        refundRate: refundLimit ? Number(refundLimit) : undefined,
+      })
+    }
+    onNext()
+  }, [user, revenueGoal, salesGoal, refundLimit, onNext])
 
   return (
     <div className="w-full max-w-md mx-auto space-y-6">
@@ -449,7 +474,7 @@ function StepGoals({
           <Button variant="ghost" onClick={onNext}>
             Pular
           </Button>
-          <Button onClick={onNext}>
+          <Button onClick={handleContinue}>
             Continuar
             <ArrowRight className="h-4 w-4" />
           </Button>
@@ -734,24 +759,34 @@ function StepComplete({ onFinish }: { onFinish: () => void }) {
 export function OnboardingWizard() {
   const [currentStep, setCurrentStep] = useState(1)
   const navigate = useNavigate()
+  const { user } = useAuth()
 
   const goNext = useCallback(() => {
-    setCurrentStep((s) => Math.min(s + 1, 6))
-  }, [])
+    setCurrentStep((s) => {
+      const nextStep = Math.min(s + 1, 6)
+      if (user?.id) {
+        updateOnboardingStep(user.id, nextStep)
+      }
+      return nextStep
+    })
+  }, [user])
 
   const goBack = useCallback(() => {
     setCurrentStep((s) => Math.max(s - 1, 1))
   }, [])
 
-  const handleFinish = useCallback(() => {
+  const handleFinish = useCallback(async () => {
     // In demo mode, persist onboarding completion in localStorage
     try {
       localStorage.setItem('hotmart_analytics_onboarding_completed', 'true')
     } catch {
       // Storage might be unavailable
     }
+    if (user?.id) {
+      await completeOnboarding(user.id)
+    }
     navigate('/dashboard')
-  }, [navigate])
+  }, [navigate, user])
 
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-gray-50 via-white to-blue-50/30">
