@@ -242,3 +242,12 @@ export function getDemoData(): DemoData {
   }
   return _demoData
 }
+
+// Empty dataset for authenticated users with no data yet
+export const EMPTY_DATA: DemoData = {
+  products: [],
+  affiliates: [],
+  transactions: [],
+  refunds: [],
+  dailyMetrics: [],
+}

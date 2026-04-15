@@ -1,13 +1,14 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
-import { getDemoData } from '@/services/demo-data'
+import { getDemoData, EMPTY_DATA } from '@/services/demo-data'
 import type { DemoData, DemoTransaction, DemoProduct, DemoAffiliate, DemoRefund, DemoDailyMetric } from '@/services/demo-data'
 
 interface UseDataReturn {
   data: DemoData
   isRealData: boolean
   loading: boolean
+  isEmpty: boolean
   refetch: () => Promise<void>
 }
 
@@ -118,8 +119,12 @@ export function useData(): UseDataReturn {
   }, [fetchRealData])
 
   const demoData = useMemo(() => getDemoData(), [])
-  const data = realData || demoData
-  const isRealData = realData !== null
 
-  return { data, isRealData, loading, refetch: fetchRealData }
+  // Only show demo data in actual demo mode (no Supabase configured).
+  // For real users with no data yet, show empty state instead of fake data.
+  const data = realData ?? (isDemoMode ? demoData : EMPTY_DATA)
+  const isRealData = realData !== null
+  const isEmpty = !isDemoMode && !realData
+
+  return { data, isRealData, loading, isEmpty, refetch: fetchRealData }
 }

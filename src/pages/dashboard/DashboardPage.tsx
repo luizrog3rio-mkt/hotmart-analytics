@@ -21,8 +21,11 @@ import {
   Receipt,
   TrendingUp,
   RotateCcw,
+  Upload,
+  Plug,
 } from 'lucide-react'
 
+import { useNavigate } from 'react-router-dom'
 import { useData } from '@/hooks/useData'
 import {
   calculateKPIs,
@@ -133,7 +136,8 @@ function DashboardPage() {
     to: new Date(),
   })
 
-  const { data: demoData } = useData()
+  const { data: demoData, isEmpty } = useData()
+  const navigate = useNavigate()
 
   // KPIs
   const kpis = useMemo(
@@ -190,8 +194,42 @@ function DashboardPage() {
       </div>
 
       {/* ----------------------------------------------------------------- */}
+      {/* Empty state — no real data yet                                    */}
+      {/* ----------------------------------------------------------------- */}
+      {isEmpty && (
+        <div className="rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700 p-10 text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-900/30">
+            <Upload className="h-8 w-8 text-blue-500" />
+          </div>
+          <h2 className="mt-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
+            Nenhum dado importado ainda
+          </h2>
+          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto">
+            Importe seus dados da Hotmart (CSV/Excel) ou conecte a API para ver suas metricas reais aqui.
+          </p>
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            <button
+              onClick={() => navigate('/vendas/transacoes')}
+              className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-blue-700 transition-colors"
+            >
+              <Upload className="h-4 w-4" />
+              Importar CSV/Excel
+            </button>
+            <button
+              onClick={() => navigate('/configuracoes')}
+              className="inline-flex items-center gap-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            >
+              <Plug className="h-4 w-4" />
+              Conectar Hotmart API
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ----------------------------------------------------------------- */}
       {/* KPI Cards                                                         */}
       {/* ----------------------------------------------------------------- */}
+      {!isEmpty && <>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-5">
         <KPICard
           title="Receita Total"
@@ -430,6 +468,7 @@ function DashboardPage() {
           <FunnelChart data={funnelData} />
         </ChartContainer>
       </div>
+      </>}
     </div>
   )
 }
