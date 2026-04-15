@@ -136,7 +136,7 @@ function DashboardPage() {
     to: new Date(),
   })
 
-  const { data: demoData, isEmpty } = useData()
+  const { data: demoData, isEmpty, loading } = useData()
   const navigate = useNavigate()
 
   // KPIs
@@ -194,9 +194,19 @@ function DashboardPage() {
       </div>
 
       {/* ----------------------------------------------------------------- */}
+      {/* Loading state                                                     */}
+      {/* ----------------------------------------------------------------- */}
+      {loading && (
+        <div className="flex flex-col items-center justify-center py-20">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600" />
+          <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">Carregando seus dados...</p>
+        </div>
+      )}
+
+      {/* ----------------------------------------------------------------- */}
       {/* Empty state — no real data yet                                    */}
       {/* ----------------------------------------------------------------- */}
-      {isEmpty && (
+      {!loading && isEmpty && (
         <div className="rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700 p-10 text-center">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-900/30">
             <Upload className="h-8 w-8 text-blue-500" />
@@ -229,7 +239,7 @@ function DashboardPage() {
       {/* ----------------------------------------------------------------- */}
       {/* KPI Cards                                                         */}
       {/* ----------------------------------------------------------------- */}
-      {!isEmpty && <>
+      {!loading && !isEmpty && <>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-5">
         <KPICard
           title="Receita Total"

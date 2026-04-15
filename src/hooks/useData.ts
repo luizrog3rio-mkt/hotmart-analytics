@@ -15,34 +15,53 @@ interface UseDataReturn {
 export function useData(): UseDataReturn {
   const { user, isDemoMode } = useAuth()
   const [realData, setRealData] = useState<DemoData | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(!isDemoMode) // start loading for real users
+  const [checkedOnce, setCheckedOnce] = useState(false)
 
   const fetchRealData = useCallback(async () => {
-    if (isDemoMode || !user) return
+    if (isDemoMode || !user) {
+      setLoading(false)
+      setCheckedOnce(true)
+      return
+    }
 
     setLoading(true)
     try {
       // Check if user has any transactions
-      const { count } = await supabase
+      const { count, error: countErr } = await supabase
         .from('transactions')
         .select('id', { count: 'exact', head: true })
         .eq('user_id', user.id)
 
+      if (countErr) {
+        console.error('[useData] Count query failed:', countErr.message, countErr.code)
+      }
+
       if (!count || count === 0) {
-        // No real data — will fallback to demo
+        console.log('[useData] No transactions found for user', user.id, '(count:', count, ')')
         setRealData(null)
         setLoading(false)
+        setCheckedOnce(true)
         return
       }
 
-      // Fetch all data in parallel
+      console.log('[useData] Found', count, 'transactions, fetching data...')
+
+      // Fetch all data in parallel (limit transactions to most recent 5000)
       const [productsRes, affiliatesRes, transactionsRes, refundsRes, metricsRes] = await Promise.all([
         supabase.from('products').select('*').eq('user_id', user.id),
         supabase.from('affiliates').select('*').eq('user_id', user.id),
-        supabase.from('transactions').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
+        supabase.from('transactions').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(5000),
         supabase.from('refunds').select('*').eq('user_id', user.id),
         supabase.from('daily_metrics').select('*').eq('user_id', user.id).order('date', { ascending: true }),
       ])
+
+      // Log any query errors
+      if (productsRes.error) console.error('[useData] Products query failed:', productsRes.error.message)
+      if (affiliatesRes.error) console.error('[useData] Affiliates query failed:', affiliatesRes.error.message)
+      if (transactionsRes.error) console.error('[useData] Transactions query failed:', transactionsRes.error.message)
+      if (refundsRes.error) console.error('[useData] Refunds query failed:', refundsRes.error.message)
+      if (metricsRes.error) console.error('[useData] Metrics query failed:', metricsRes.error.message)
 
       // Map Supabase rows to demo data format
       const products: DemoProduct[] = (productsRes.data || []).map(p => ({
@@ -105,12 +124,14 @@ export function useData(): UseDataReturn {
         avg_ticket: Number(m.avg_ticket),
       }))
 
+      console.log('[useData] Loaded:', products.length, 'products,', transactions.length, 'transactions')
       setRealData({ products, affiliates, transactions, refunds, dailyMetrics })
     } catch (err) {
-      console.error('Failed to fetch real data:', err)
+      console.error('[useData] Failed to fetch real data:', err)
       setRealData(null)
     } finally {
       setLoading(false)
+      setCheckedOnce(true)
     }
   }, [user, isDemoMode])
 
@@ -124,7 +145,7 @@ export function useData(): UseDataReturn {
   // For real users with no data yet, show empty state instead of fake data.
   const data = realData ?? (isDemoMode ? demoData : EMPTY_DATA)
   const isRealData = realData !== null
-  const isEmpty = !isDemoMode && !realData
+  const isEmpty = !isDemoMode && !realData && checkedOnce && !loading
 
   return { data, isRealData, loading, isEmpty, refetch: fetchRealData }
 }
