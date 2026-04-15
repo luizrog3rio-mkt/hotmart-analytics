@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import {
   User,
   Plug,
@@ -15,11 +15,26 @@ import {
   Mail,
   Send,
   FileSpreadsheet,
+  RefreshCw,
+  Loader2,
+  Clock,
+  Unplug,
+  CheckCircle2,
+  XCircle,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import { updateProfile } from '@/services/import-service'
+import {
+  getConnectionStatus,
+  triggerSync,
+  disconnectHotmart,
+  saveHotmartCredentials,
+  getSyncHistory,
+  type HotmartConnectionStatus,
+  type SyncLogEntry,
+} from '@/services/hotmart-sync'
 import { Tabs } from '@/components/ui/Tabs'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
@@ -129,51 +144,238 @@ function ProfileTab() {
 // ---------------------------------------------------------------------------
 
 function IntegrationsTab() {
+  const { user, isDemoMode } = useAuth()
+  const [connectionStatus, setConnectionStatus] = useState<HotmartConnectionStatus | null>(null)
+  const [syncHistory, setSyncHistory] = useState<SyncLogEntry[]>([])
+  const [clientId, setClientId] = useState('')
+  const [clientSecret, setClientSecret] = useState('')
+  const [syncing, setSyncing] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [showCredentials, setShowCredentials] = useState(false)
+
+  const loadStatus = useCallback(async () => {
+    if (!user?.id || isDemoMode) return
+    const status = await getConnectionStatus(user.id)
+    setConnectionStatus(status)
+    const history = await getSyncHistory(user.id, 5)
+    setSyncHistory(history)
+  }, [user?.id, isDemoMode])
+
+  useEffect(() => { loadStatus() }, [loadStatus])
+
+  const handleSaveCredentials = async () => {
+    if (!user?.id || !clientId || !clientSecret) return
+    setSaving(true)
+    const result = await saveHotmartCredentials(user.id, clientId, clientSecret)
+    setSaving(false)
+    if (result.success) {
+      toast.success('Credenciais salvas! Agora faca a primeira sincronizacao.')
+      setConnectionStatus(prev => prev ? { ...prev, connected: true } : { connected: true, lastSyncAt: null, tokenExpiresAt: null })
+      setShowCredentials(false)
+    } else {
+      toast.error('Erro ao salvar credenciais')
+    }
+  }
+
+  const handleSync = async (mode: 'full' | 'incremental') => {
+    setSyncing(true)
+    const result = await triggerSync(mode)
+    setSyncing(false)
+    if (result.success) {
+      toast.success(`Sync ${mode} concluido! ${result.records_created || 0} novos registros.`)
+      loadStatus()
+    } else {
+      toast.error(result.error || 'Erro na sincronizacao')
+    }
+  }
+
+  const handleDisconnect = async () => {
+    const result = await disconnectHotmart()
+    if (result.success) {
+      toast.success('Hotmart desconectada')
+      setConnectionStatus({ connected: false, lastSyncAt: null, tokenExpiresAt: null })
+      setSyncHistory([])
+    }
+  }
+
+  const isConnected = connectionStatus?.connected || false
+
   return (
     <div className="space-y-6">
-      {/* Hotmart API */}
+      {/* Hotmart API Connection */}
       <Card>
         <CardContent className="p-6">
           <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-orange-50">
-              <Plug className="h-6 w-6 text-orange-500" />
+            <div className={cn(
+              'flex h-12 w-12 shrink-0 items-center justify-center rounded-xl',
+              isConnected ? 'bg-green-50' : 'bg-orange-50',
+            )}>
+              <Plug className={cn('h-6 w-6', isConnected ? 'text-green-500' : 'text-orange-500')} />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-gray-900">Hotmart API</h3>
-                <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-semibold text-red-600 ring-1 ring-red-100">
-                  <X className="h-3 w-3" />
-                  Desconectado
-                </span>
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100">Hotmart API</h3>
+                {isConnected ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-semibold text-green-600 ring-1 ring-green-100">
+                    <Check className="h-3 w-3" />
+                    Conectado
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-semibold text-red-600 ring-1 ring-red-100">
+                    <X className="h-3 w-3" />
+                    Desconectado
+                  </span>
+                )}
               </div>
-              <p className="mt-1 text-sm text-gray-500">
-                Conecte sua conta Hotmart para sincronizar vendas automaticamente
+
+              {isConnected && connectionStatus?.lastSyncAt && (
+                <p className="mt-1 text-xs text-gray-400 flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  Ultimo sync: {new Date(connectionStatus.lastSyncAt).toLocaleString('pt-BR')}
+                </p>
+              )}
+
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                {isConnected
+                  ? 'Sua conta Hotmart esta conectada. Sincronize para atualizar os dados.'
+                  : 'Conecte sua conta Hotmart para sincronizar vendas automaticamente'}
               </p>
-              <Button variant="outline" size="sm" className="mt-3" disabled>
-                <Plug className="h-4 w-4" />
-                Conectar API
-              </Button>
+
+              <div className="mt-3 flex flex-wrap gap-2">
+                {isConnected ? (
+                  <>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => handleSync('incremental')}
+                      disabled={syncing || isDemoMode}
+                    >
+                      {syncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                      {syncing ? 'Sincronizando...' : 'Sync incremental'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleSync('full')}
+                      disabled={syncing || isDemoMode}
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                      Sync completo
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleDisconnect}
+                      disabled={isDemoMode}
+                    >
+                      <Unplug className="h-4 w-4" />
+                      Desconectar
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowCredentials(!showCredentials)}
+                    disabled={isDemoMode}
+                  >
+                    <Plug className="h-4 w-4" />
+                    Conectar API
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
+
+          {/* Credential form */}
+          {showCredentials && !isConnected && (
+            <div className="mt-4 rounded-xl border border-gray-200 dark:border-gray-700 p-4 space-y-3">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Acesse developers.hotmart.com para obter suas credenciais OAuth2.
+              </p>
+              <Input
+                label="Client ID"
+                value={clientId}
+                onChange={(e) => setClientId(e.target.value)}
+                placeholder="Seu Client ID da Hotmart"
+              />
+              <Input
+                label="Client Secret"
+                type="password"
+                value={clientSecret}
+                onChange={(e) => setClientSecret(e.target.value)}
+                placeholder="Seu Client Secret"
+              />
+              <Button
+                size="sm"
+                onClick={handleSaveCredentials}
+                disabled={!clientId || !clientSecret || saving}
+              >
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                {saving ? 'Salvando...' : 'Salvar e conectar'}
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
+
+      {/* Sync History */}
+      {syncHistory.length > 0 && (
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-2 pb-4">
+              <RefreshCw className="h-4 w-4 text-gray-400" />
+              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                Historico de sincronizacao
+              </h3>
+            </div>
+            <div className="space-y-2">
+              {syncHistory.map((entry) => (
+                <div
+                  key={entry.id}
+                  className="flex items-center gap-3 rounded-lg border border-gray-100 dark:border-gray-700 px-3 py-2 text-sm"
+                >
+                  {entry.status === 'completed' ? (
+                    <CheckCircle2 className="h-4 w-4 shrink-0 text-green-500" />
+                  ) : entry.status === 'failed' ? (
+                    <XCircle className="h-4 w-4 shrink-0 text-red-500" />
+                  ) : (
+                    <Loader2 className="h-4 w-4 shrink-0 text-blue-500 animate-spin" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <span className="text-gray-700 dark:text-gray-300 capitalize">{entry.sync_type}</span>
+                    {entry.status === 'completed' && (
+                      <span className="text-gray-400 ml-2">
+                        {entry.records_created} novos, {entry.records_updated} atualizados
+                      </span>
+                    )}
+                    {entry.error_message && (
+                      <span className="text-red-400 ml-2">{entry.error_message}</span>
+                    )}
+                  </div>
+                  <span className="text-xs text-gray-400 shrink-0">
+                    {new Date(entry.started_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* CSV Import History */}
       <Card>
         <CardContent className="p-6">
           <div className="flex items-center gap-2 pb-4">
             <FileSpreadsheet className="h-4 w-4 text-gray-400" />
-            <h3 className="text-sm font-semibold text-gray-700">
-              Historico de importacoes
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+              Importacao CSV/Excel
             </h3>
           </div>
 
-          <div className="rounded-xl border border-dashed border-gray-200 p-8 text-center">
+          <div className="rounded-xl border border-dashed border-gray-200 dark:border-gray-700 p-8 text-center">
             <Upload className="mx-auto h-8 w-8 text-gray-300" />
             <p className="mt-2 text-sm text-gray-400">
-              Nenhuma importacao realizada ainda
-            </p>
-            <p className="mt-1 text-xs text-gray-300">
               Importe dados pelo onboarding ou pela pagina de transacoes
             </p>
           </div>

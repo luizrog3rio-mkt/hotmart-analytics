@@ -7,6 +7,7 @@ import {
   Receipt,
   RotateCcw,
   Download,
+  Upload,
 } from 'lucide-react'
 import { useData } from '@/hooks/useData'
 import type { DemoTransaction } from '@/services/demo-data'
@@ -19,6 +20,7 @@ import { DataTable, type Column } from '@/components/data/DataTable'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge, type BadgeVariant } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
+import { ImportCSVModal } from '@/components/import/ImportCSVModal'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -58,7 +60,8 @@ const SOURCE_LABELS: Record<string, string> = {
 // ---------------------------------------------------------------------------
 
 export function TransactionsPage() {
-  const { data } = useData()
+  const { data, refetch } = useData()
+  const [importOpen, setImportOpen] = useState(false)
 
   const [dateRange, setDateRange] = useState<DateRange>({
     from: startOfDay(subDays(new Date(), 29)),
@@ -221,10 +224,16 @@ export function TransactionsPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <DateRangePicker value={dateRange} onChange={setDateRange} />
 
-        <Button variant="outline" size="sm" onClick={handleExport}>
-          <Download className="h-4 w-4" />
-          Exportar CSV
-        </Button>
+        <div className="flex gap-2">
+          <Button size="sm" onClick={() => setImportOpen(true)}>
+            <Upload className="h-4 w-4" />
+            Importar CSV
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleExport}>
+            <Download className="h-4 w-4" />
+            Exportar CSV
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -315,6 +324,13 @@ export function TransactionsPage() {
         rowKey={(row) => row.id}
         pageSize={15}
         emptyMessage="Nenhuma transacao encontrada para os filtros selecionados."
+      />
+
+      {/* Import modal */}
+      <ImportCSVModal
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        onImported={refetch}
       />
     </div>
   )

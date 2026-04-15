@@ -10,7 +10,7 @@ export function ProtectedRoute() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <LoadingState message="Verificando autentica\u00e7\u00e3o..." />
+        <LoadingState message="Verificando autenticação..." />
       </div>
     )
   }

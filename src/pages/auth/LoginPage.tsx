@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { BarChart3, LogIn, Mail, Lock, Sparkles } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { BarChart3, LogIn, Mail, Lock, Sparkles, UserPlus } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/Button'
@@ -86,11 +86,11 @@ export default function LoginPage() {
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white">
               <BarChart3 className="h-6 w-6" />
             </div>
-            <span className="text-xl font-bold tracking-tight text-gray-900">Hotmart Analytics</span>
+            <span className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">Hotmart Analytics</span>
           </div>
 
-          <h2 className="text-2xl font-bold text-gray-900">Entrar na sua conta</h2>
-          <p className="mt-1 text-sm text-gray-500">Insira suas credenciais para continuar.</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Entrar na sua conta</h2>
+          <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">Insira suas credenciais para continuar.</p>
 
           <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
             <Input
@@ -122,6 +122,27 @@ export default function LoginPage() {
               Entrar
             </Button>
           </form>
+
+          {/* Divider */}
+          <div className="relative my-8">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-200 dark:border-slate-600" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="bg-gray-50 dark:bg-[#0f172a] px-4 text-gray-400 dark:text-slate-500">
+                Ainda não tem conta?
+              </span>
+            </div>
+          </div>
+
+          {/* Register link */}
+          <Link
+            to="/register"
+            className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-200 dark:border-slate-600 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-slate-300 transition-colors hover:bg-gray-50 dark:hover:bg-slate-800"
+          >
+            <UserPlus className="h-4 w-4" />
+            Criar conta grátis
+          </Link>
         </div>
       </div>
     </div>

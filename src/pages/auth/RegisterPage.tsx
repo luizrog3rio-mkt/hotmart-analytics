@@ -123,13 +123,13 @@ export default function RegisterPage() {
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white">
               <BarChart3 className="h-6 w-6" />
             </div>
-            <span className="text-xl font-bold tracking-tight text-gray-900">
+            <span className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
               Hotmart Analytics
             </span>
           </div>
 
-          <h2 className="text-2xl font-bold text-gray-900">Criar sua conta</h2>
-          <p className="mt-1 text-sm text-gray-500">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Criar sua conta</h2>
+          <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">
             Preencha os dados abaixo para come&ccedil;ar.
           </p>
 
@@ -162,7 +162,7 @@ export default function RegisterPage() {
               label="Senha"
               type="password"
               name="password"
-              placeholder="M\u00ednimo 6 caracteres"
+              placeholder="Mínimo 6 caracteres"
               icon={Lock}
               required
               autoComplete="new-password"
@@ -196,10 +196,10 @@ export default function RegisterPage() {
           {/* Divider */}
           <div className="relative my-8">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200" />
+              <div className="w-full border-t border-gray-200 dark:border-slate-600" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="bg-white px-4 text-gray-400">
+              <span className="bg-gray-50 dark:bg-[#0f172a] px-4 text-gray-400">
                 J&aacute; tem uma conta?
               </span>
             </div>
@@ -208,7 +208,7 @@ export default function RegisterPage() {
           {/* Back to login */}
           <Link
             to="/login"
-            className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+            className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-200 dark:border-slate-600 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-slate-300 transition-colors hover:bg-gray-50 dark:hover:bg-slate-800"
           >
             <ArrowLeft className="h-4 w-4" />
             Voltar ao login

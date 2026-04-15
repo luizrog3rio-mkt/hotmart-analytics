@@ -103,7 +103,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // -- Auth state listener --------------------------------------------------
 
   useEffect(() => {
-    // In demo mode we skip Supabase auth entirely
     if (DEMO_MODE) {
       setUser(DEMO_USER)
       setProfile(DEMO_PROFILE)
@@ -111,37 +110,59 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return
     }
 
-    // 1. Get the current session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      const currentUser = session?.user ?? null
-      setUser(currentUser)
+    let mounted = true
 
-      if (currentUser) {
-        const p = await fetchProfile(currentUser.id)
-        setProfile(p)
+    // Safety timeout — never stay loading forever
+    const timeout = setTimeout(() => {
+      if (mounted && loading) {
+        console.warn('Auth loading timeout — forcing loaded state')
+        setLoading(false)
       }
+    }, 5000)
 
-      setLoading(false)
-    })
+    async function init() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!mounted) return
 
-    // 2. Listen for changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      const currentUser = session?.user ?? null
-      setUser(currentUser)
+        const currentUser = session?.user ?? null
+        setUser(currentUser)
 
-      if (currentUser) {
-        const p = await fetchProfile(currentUser.id)
-        setProfile(p)
-      } else {
-        setProfile(null)
+        if (currentUser) {
+          const p = await fetchProfile(currentUser.id)
+          if (mounted) setProfile(p)
+        }
+      } catch (err) {
+        console.error('Auth init error:', err)
+      } finally {
+        if (mounted) setLoading(false)
       }
+    }
 
-      setLoading(false)
-    })
+    init()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        if (!mounted) return
+        const currentUser = session?.user ?? null
+        setUser(currentUser)
+
+        if (currentUser) {
+          try {
+            const p = await fetchProfile(currentUser.id)
+            if (mounted) setProfile(p)
+          } catch {
+            // profile fetch failed, continue with null
+          }
+        } else {
+          setProfile(null)
+        }
+      },
+    )
 
     return () => {
+      mounted = false
+      clearTimeout(timeout)
       subscription.unsubscribe()
     }
   }, [fetchProfile])
