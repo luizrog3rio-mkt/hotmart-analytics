@@ -115,6 +115,41 @@ Curso A,297,Disputada,joao@test.com`
     expect(mapped[0].status).toBe('disputed')
   })
 
+  it('normaliza status reais da Hotmart (masculino e feminino)', async () => {
+    const csv = `Produto,Valor,Status,Email
+A,100,Aprovado,a@t.com
+B,100,Aprovada,b@t.com
+C,100,Completa,c@t.com
+D,100,Reembolsado,d@t.com
+E,100,Cancelado,e@t.com
+F,100,Expirada,f@t.com
+G,100,Chargeback,g@t.com
+H,100,Reclamado,h@t.com
+I,100,Atrasado,i@t.com
+J,100,Aguardando pagamento,j@t.com
+K,100,Em Análise,k@t.com
+L,100,Boleto Gerado,l@t.com
+M,100,Iniciada,m@t.com`
+
+    const file = createCSVFile(csv)
+    const parsed = await parseFile(file)
+    const mapped = mapToTransactions(parsed)
+
+    expect(mapped[0].status).toBe('approved')  // Aprovado
+    expect(mapped[1].status).toBe('approved')  // Aprovada
+    expect(mapped[2].status).toBe('approved')  // Completa (passou da garantia)
+    expect(mapped[3].status).toBe('refunded')  // Reembolsado
+    expect(mapped[4].status).toBe('cancelled') // Cancelado
+    expect(mapped[5].status).toBe('cancelled') // Expirada
+    expect(mapped[6].status).toBe('disputed')  // Chargeback
+    expect(mapped[7].status).toBe('disputed')  // Reclamado
+    expect(mapped[8].status).toBe('pending')   // Atrasado
+    expect(mapped[9].status).toBe('pending')   // Aguardando
+    expect(mapped[10].status).toBe('pending')  // Em Análise
+    expect(mapped[11].status).toBe('pending')  // Boleto Gerado
+    expect(mapped[12].status).toBe('pending')  // Iniciada
+  })
+
   it('status desconhecido vira "pending"', async () => {
     const csv = `Produto,Valor,Status,Email
 Curso A,297,Processando,joao@test.com`

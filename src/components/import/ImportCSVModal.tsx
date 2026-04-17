@@ -155,6 +155,7 @@ export function ImportCSVModal({ open, onClose, onImported }: Props) {
         total: mapped.length,
         approved: mapped.filter(t => t.status === 'approved').length,
         pending: mapped.filter(t => t.status === 'pending').length,
+        refunded: mapped.filter(t => t.status === 'refunded' || t.status === 'disputed').length,
         cancelled: mapped.filter(t => t.status === 'cancelled').length,
         products: new Set(mapped.map(t => t.product_name)).size,
       }
@@ -225,18 +226,22 @@ export function ImportCSVModal({ open, onClose, onImported }: Props) {
           </div>
 
           {/* Stats grid */}
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
             <div className="rounded-lg bg-green-50 dark:bg-green-950/20 p-3 text-center">
               <p className="text-lg font-bold text-green-700 dark:text-green-400">{formatNumber(stats.approved)}</p>
-              <p className="text-xs text-green-600 dark:text-green-500">Aprovados</p>
+              <p className="text-xs text-green-600 dark:text-green-500">Aprovadas</p>
             </div>
             <div className="rounded-lg bg-yellow-50 dark:bg-yellow-950/20 p-3 text-center">
               <p className="text-lg font-bold text-yellow-700 dark:text-yellow-400">{formatNumber(stats.pending)}</p>
               <p className="text-xs text-yellow-600 dark:text-yellow-500">Pendentes</p>
             </div>
+            <div className="rounded-lg bg-orange-50 dark:bg-orange-950/20 p-3 text-center">
+              <p className="text-lg font-bold text-orange-700 dark:text-orange-400">{formatNumber(stats.refunded)}</p>
+              <p className="text-xs text-orange-600 dark:text-orange-500">Reembolsadas</p>
+            </div>
             <div className="rounded-lg bg-red-50 dark:bg-red-950/20 p-3 text-center">
               <p className="text-lg font-bold text-red-700 dark:text-red-400">{formatNumber(stats.cancelled)}</p>
-              <p className="text-xs text-red-600 dark:text-red-500">Cancelados</p>
+              <p className="text-xs text-red-600 dark:text-red-500">Canceladas</p>
             </div>
             <div className="rounded-lg bg-blue-50 dark:bg-blue-950/20 p-3 text-center">
               <p className="text-lg font-bold text-blue-700 dark:text-blue-400">{stats.products}</p>
@@ -275,11 +280,14 @@ export function ImportCSVModal({ open, onClose, onImported }: Props) {
                         <Badge
                           variant={
                             t.status === 'approved' ? 'success' :
-                            t.status === 'cancelled' ? 'danger' : 'warning'
+                            t.status === 'cancelled' ? 'danger' :
+                            t.status === 'refunded' || t.status === 'disputed' ? 'danger' : 'warning'
                           }
                         >
-                          {t.status === 'approved' ? 'Aprovado' :
-                           t.status === 'cancelled' ? 'Cancelado' :
+                          {t.status === 'approved' ? 'Aprovada' :
+                           t.status === 'cancelled' ? 'Cancelada' :
+                           t.status === 'refunded' ? 'Reembolsada' :
+                           t.status === 'disputed' ? 'Disputada' :
                            t.status === 'pending' ? 'Pendente' : t.status}
                         </Badge>
                       </td>

@@ -373,13 +373,29 @@ export function mapToTransactions(parsed: ParseResult): MappedTransaction[] {
     })
 }
 
+// Hotmart transaction statuses:
+//   Aprovada  → approved (pagamento identificado, acesso liberado)
+//   Completa  → approved (passou da garantia — não pode mais reembolsar)
+//   Reembolsada / Chargeback → refunded / disputed
+//   Reclamada → disputed (cancelamento solicitado, reembolso não liberado)
+//   Cancelada / Expirada → cancelled
+//   Atrasada / Aguardando / Em Análise / Boleto Gerado / Iniciada → pending
 function normalizeStatus(status: string): string {
   const s = status.toLowerCase().trim()
-  if (s.includes('aprovad') || s === 'approved' || s === 'complete' || s === 'completo') return 'approved'
-  if (s.includes('cancelad') || s === 'cancelled') return 'cancelled'
+
+  // approved: venda válida (inclui Completa — garantia expirou)
+  if (s.includes('aprovad') || s.includes('complet') || s === 'approved') return 'approved'
+
+  // refunded: reembolso processado
   if (s.includes('reembolsad') || s === 'refunded') return 'refunded'
-  if (s.includes('disputa') || s === 'disputed') return 'disputed'
-  if (s.includes('atrasado') || s.includes('aguardando') || s === 'pending') return 'pending'
+
+  // disputed: chargeback, reclamação ou disputa ativa
+  if (s.includes('chargeback') || s.includes('reclamad') || s.includes('disput')) return 'disputed'
+
+  // cancelled: cancelamento ou expiração do boleto
+  if (s.includes('cancelad') || s.includes('expirad') || s === 'cancelled') return 'cancelled'
+
+  // pending: aguardando / análise / atraso / boleto gerado / iniciada
   return 'pending'
 }
 
