@@ -11,8 +11,10 @@ export const supabase = createClient<Database>(
       flowType: 'implicit',
       detectSessionInUrl: true,
       persistSession: true,
-      // Disable Navigator Lock API to prevent conflicts with multiple tabs/previews
-      lock: async (_name: string, _acquireTimeout: number, fn: () => Promise<unknown>) => fn(),
+      // Disable Navigator Lock API to avoid multi-tab deadlocks. Must be generic
+      // to match LockFunc = <R>(...) => Promise<R> — a non-generic signature
+      // degrades the client type and breaks type inference across the app.
+      lock: <R,>(_name: string, _acquireTimeout: number, fn: () => Promise<R>): Promise<R> => fn(),
     },
   },
 )
