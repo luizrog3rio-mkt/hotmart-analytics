@@ -50,18 +50,17 @@ Deno.serve(async (req: Request) => {
   try {
     const body = await req.json()
 
-    // Hotmart sends hottok in the payload for verification
-    const hottok = body.hottok
-    if (!hottok) {
-      console.warn('Webhook received without hottok')
-      return new Response(JSON.stringify({ error: 'Missing hottok' }), {
-        status: 400,
+    // Validate hottok against the configured secret
+    const expectedHottok = Deno.env.get('HOTMART_HOTTOK')
+    const receivedHottok = body.hottok
+    if (!expectedHottok || receivedHottok !== expectedHottok) {
+      console.warn('Webhook rejected: invalid hottok')
+      return new Response(JSON.stringify({ error: 'Invalid hottok' }), {
+        status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
-    // Find the user by matching the hottok (stored as hotmart_client_secret or a dedicated field)
-    // In practice, you'd configure the webhook secret per user
     const event = body.event || body.status
     const data = body.data || body
 
