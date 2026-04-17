@@ -34,6 +34,11 @@ export function ImportCSVModal({ open, onClose, onImported }: Props) {
   const [fileName, setFileName] = useState('')
   const [parseResult, setParseResult] = useState<ParseResult | null>(null)
   const [mapped, setMapped] = useState<MappedTransaction[]>([])
+  const [progress, setProgress] = useState<{
+    phase: 'products' | 'transactions' | 'finalizing'
+    current: number
+    total: number
+  }>({ phase: 'products', current: 0, total: 1 })
   const [importResult, setImportResult] = useState<{
     success: boolean
     productsCreated: number
@@ -49,6 +54,7 @@ export function ImportCSVModal({ open, onClose, onImported }: Props) {
     setFileName('')
     setParseResult(null)
     setMapped([])
+    setProgress({ phase: 'products', current: 0, total: 1 })
     setImportResult(null)
   }, [])
 
@@ -127,7 +133,7 @@ export function ImportCSVModal({ open, onClose, onImported }: Props) {
       console.log('[Import] Session OK, user:', sessionData.session.user.id)
 
       const result = await importTransactionsToSupabase(user.id, mapped, fileName, (p) => {
-        console.log('[Import] Progress:', p.phase, p.current, '/', p.total)
+        setProgress(p)
       })
 
       setImportResult(result)
@@ -321,17 +327,52 @@ export function ImportCSVModal({ open, onClose, onImported }: Props) {
       )}
 
       {/* STEP: Importing */}
-      {step === 'importing' && (
-        <div className="flex flex-col items-center justify-center py-10">
-          <Loader2 className="mb-4 h-10 w-10 animate-spin text-blue-600" />
-          <p className="text-sm font-medium text-gray-700 dark:text-slate-300">
-            Importando transações...
-          </p>
-          <p className="mt-1 text-xs text-gray-500 dark:text-slate-400">
-            Isso pode levar alguns segundos
-          </p>
-        </div>
-      )}
+      {step === 'importing' && (() => {
+        const batchSize = 500
+        const totalTx = mapped.length
+        // Estimate transactions processed: batches completed × batchSize, capped at total
+        const txProcessed = progress.phase === 'products'
+          ? 0
+          : progress.phase === 'finalizing'
+            ? totalTx
+            : Math.min(progress.current * batchSize, totalTx)
+        const pct = progress.phase === 'products'
+          ? 5
+          : progress.phase === 'finalizing'
+            ? 100
+            : totalTx > 0
+              ? Math.round((txProcessed / totalTx) * 95) + 5
+              : 5
+        const phaseLabel =
+          progress.phase === 'products' ? 'Processando produtos...' :
+          progress.phase === 'finalizing' ? 'Finalizando...' :
+          'Importando transações...'
+
+        return (
+          <div className="flex flex-col items-center justify-center py-10">
+            <Loader2 className="mb-4 h-10 w-10 animate-spin text-blue-600" />
+            <p className="text-sm font-medium text-gray-700 dark:text-slate-300">
+              {phaseLabel}
+            </p>
+            <p className="mt-1 text-xs text-gray-500 dark:text-slate-400">
+              {formatNumber(txProcessed)} de {formatNumber(totalTx)} transações
+            </p>
+
+            {/* Progress bar */}
+            <div className="mt-4 w-full max-w-sm">
+              <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-slate-700">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-300 ease-out"
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+              <p className="mt-2 text-center text-xs font-medium text-gray-400 dark:text-slate-500">
+                {pct}%
+              </p>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* STEP: Done */}
       {step === 'done' && importResult && (
